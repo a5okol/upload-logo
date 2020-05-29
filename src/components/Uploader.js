@@ -2,39 +2,32 @@ import React from "react";
 import { Upload, message } from "antd";
 const { Dragger } = Upload;
 
-class Uploader extends React.Component {
-    constructor(props) {
-        super(props);
+type Props = {
+};
 
-        this.state = {
-            name: "photo",
-            img: null,
-            multiple: false,
-            loading: false,
-            isSuccses: false,
-            action: "http://localhost:5000/public/photo",
-            onChange: (img) => {
-                const { status } = img.file;
-                if (status !== "uploading") {
-                    this.toggleLoadingOn(img.file.name);
-                }
+type State = {
+    multiple: boolean,
+    img: string,
+    onChange: string,
+    action: string,
+    loading: boolean,
+    isSuccses: boolean,
+    name: string,
+};
 
-                if (status === "done") {
-                    this.toggleLoadingSuccess();
-                    setTimeout(() => {
-                        message.success(
-                            `${img.file.name} logo uploaded successfully.`
-                        );
-                    }, 1500);
-                } else if (status === "error") {
-                    message.error(`${img.file.name} logo upload failed.`);
-                    this.toggleLoadingFailed();
-                }
-            },
-        };
-    }
+class Uploader extends React.Component<Props, State> {
+    state = {
+        multiple: false,
+        onChange: this.onChangeHandler,
+        action: "http://localhost:5000/public/photo",
+        loading: false,
+        isSuccses: false,
+        name: "photo",
+        img: '',
+    };
 
-    toggleLoadingOn(img) {
+
+    toggleLoadingOn(img: string) {
         this.setState({
             loading: true,
             isSuccses: false,
@@ -51,12 +44,31 @@ class Uploader extends React.Component {
         }, 1500);
     }
 
-    toggleLoadingFailed() {
+    toggleLoadingFailed = () => {
+        console.log("pressed cancel or failed upload");
         this.setState({
             loading: false,
             isSuccses: false,
+            img: null,
         });
-    }
+    };
+
+    onChangeHandler = (img: string) => {
+        const { status } = img.file;
+        if (status !== "uploading") {
+            this.toggleLoadingOn(img.file.name);
+        }
+
+        if (status === "done") {
+            this.toggleLoadingSuccess();
+            setTimeout(() => {
+                message.success(`${img.file.name} logo uploaded successfully.`);
+            }, 1500);
+        } else if (status === "error") {
+            message.error(`${img.file.name} logo upload failed.`);
+            this.toggleLoadingFailed();
+        }
+    };
 
     render() {
         const uploader = (
@@ -92,9 +104,12 @@ class Uploader extends React.Component {
                 <p className="uploader__drag-text uploader__drag-text_2">
                     - or -
                 </p>
-                <p className="uploader__drag-text uploader__drag-text_3">
+                <button
+                    onClick={this.toggleLoadingFailed}
+                    className="uploader__drag-text uploader__drag-text_3"
+                >
                     Cancel
-                </p>
+                </button>
             </div>
         );
 
@@ -125,7 +140,11 @@ class Uploader extends React.Component {
 
         return (
             <div className="uploader__main uploader__main-indent">
-                <Dragger {...this.state}>
+                <Dragger
+                    onChange={this.onChangeHandler}
+                    action={"http://localhost:5000/public/photo"}
+                    name={"photo"}
+                >
                     {this.state.loading
                         ? loader
                         : this.state.isSuccses

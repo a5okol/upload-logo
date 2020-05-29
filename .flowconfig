@@ -1,0 +1,23 @@
+[ignore]
+.*/node_modules/.*
+.*/src/serviceWorker\.js
+.*/src/setupTests\.js
+.*/src/index\.js
+.*lock\.json
+.*/server/lock\.json
+.*/config/.*
+
+# dependencies
+/node_modules
+/server/node_modules
+
+[include]
+
+[libs]
+
+[lints]
+
+[options]
+all=true
+
+[strict]
