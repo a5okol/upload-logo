@@ -1,155 +1,128 @@
+// @flow
+import Loader from "./Loader";
 import React from "react";
 import { Upload, message } from "antd";
 const { Dragger } = Upload;
 
 type Props = {
-};
-
-type State = {
+    serverLink: string,
     multiple: boolean,
-    img: string,
-    onChange: string,
-    action: string,
-    loading: boolean,
     isSuccses: boolean,
-    name: string,
+    loading: boolean,
+    img: string,
+    status: Object
 };
 
-class Uploader extends React.Component<Props, State> {
+type State = {};
+
+class Uploader extends React.Component<State, Props> {
     state = {
+        serverLink: "http://localhost:5000",
         multiple: false,
-        onChange: this.onChangeHandler,
-        action: "http://localhost:5000/public/photo",
         loading: false,
         isSuccses: false,
-        name: "photo",
-        img: '',
+        img: "",
+        status: {
+            uploader: {
+                _1: "Drag & drop here",
+                _2: "Select file to upload"
+            },
+            uploadedSuccess: {
+                _1: "Drag & drop here to replace",
+                _2: "Select file to replace"
+            },
+            loader: {
+                _1: "Uploading",
+                _2: "Cancel"
+            }
+        }
     };
 
+    onChangeHandler = (img: Object) => {
+        const { status } = img.file;
+        const imgName = img.file.name;
+
+        if (status !== "uploading") {
+            this.toggleLoadingOn(imgName);
+        }
+
+        if (status === "done") {
+            setTimeout(() => {
+                this.toggleLoadingSuccess();
+                message.success(`${imgName} logo uploaded successfully.`);
+            }, 1500);
+        } else if (status === "error") {
+            this.toggleLoadingFailed();
+            message.error(`${imgName} logo upload failed.`);
+        }
+    };
 
     toggleLoadingOn(img: string) {
         this.setState({
             loading: true,
             isSuccses: false,
-            img,
+            img
         });
     }
 
     toggleLoadingSuccess() {
-        setTimeout(() => {
-            this.setState({
-                loading: false,
-                isSuccses: true,
-            });
-        }, 1500);
+        this.setState({
+            loading: false,
+            isSuccses: true
+        });
     }
 
-    toggleLoadingFailed = () => {
-        console.log("pressed cancel or failed upload");
+    toggleLoadingFailed() {
         this.setState({
             loading: false,
             isSuccses: false,
-            img: null,
+            img: ""
         });
-    };
-
-    onChangeHandler = (img: string) => {
-        const { status } = img.file;
-        if (status !== "uploading") {
-            this.toggleLoadingOn(img.file.name);
-        }
-
-        if (status === "done") {
-            this.toggleLoadingSuccess();
-            setTimeout(() => {
-                message.success(`${img.file.name} logo uploaded successfully.`);
-            }, 1500);
-        } else if (status === "error") {
-            message.error(`${img.file.name} logo upload failed.`);
-            this.toggleLoadingFailed();
-        }
-    };
+    }
 
     render() {
-        const uploader = (
-            <div>
-                <div className="uploader__drag-icon uploader__drag-icon_indent">
-                    <img src={require("../image/Icon.svg")} alt="Icon" />
-                </div>
-                <p className="uploader__drag-text uploader__drag-text_1">
-                    Drag & drop here
-                </p>
-                <p className="uploader__drag-text uploader__drag-text_2">
-                    - or -
-                </p>
-                <p className="uploader__drag-text uploader__drag-text_3">
-                    Select file to upload
-                </p>
-            </div>
-        );
-
-        const loader = (
-            <div className="uploader__loader">
-                <div></div>
-                <div></div>
-                <div></div>
-                <div></div>
-
-                <span className="uploader__drag-icon uploader__drag-icon_indent">
-                    <img src={require("../image/Icon.svg")} alt="Icon" />
-                </span>
-                <p className="uploader__drag-text uploader__drag-text_1">
-                    Uploading
-                </p>
-                <p className="uploader__drag-text uploader__drag-text_2">
-                    - or -
-                </p>
-                <button
-                    onClick={this.toggleLoadingFailed}
-                    className="uploader__drag-text uploader__drag-text_3"
-                >
-                    Cancel
-                </button>
-            </div>
-        );
-
-        const uploadedSuccess = (
-            <div>
-                <div className="uploader__drag-icon">
-                    <img
-                        className="uploader__drag-icon_img"
-                        src={
-                            this.state.img === null
-                                ? require("../image/Icon.svg")
-                                : `http://localhost:5000/assets/uploads/${this.state.img}`
-                        }
-                        alt="Icon"
-                    />
-                </div>
-                <p className="uploader__drag-text uploader__drag-text_1">
-                    Drag & drop here to replace
-                </p>
-                <p className="uploader__drag-text uploader__drag-text_2">
-                    - or -
-                </p>
-                <p className="uploader__drag-text uploader__drag-text_3">
-                    Select file to replace
-                </p>
-            </div>
-        );
-
         return (
-            <div className="uploader__main uploader__main-indent">
+            <div className={"uploader__main uploader__main-indent"}>
                 <Dragger
                     onChange={this.onChangeHandler}
-                    action={"http://localhost:5000/public/photo"}
-                    name={"photo"}
+                    action={`${this.state.serverLink}/public/assets/photos`}
+                    name={"photos"}
                 >
-                    {this.state.loading
-                        ? loader
-                        : this.state.isSuccses
-                        ? uploadedSuccess
-                        : uploader}
+                    {this.state.loading && <Loader />}
+                    <div className="uploader__drag-icon">
+                        <img
+                            className={`uploader__drag-icon_img ${
+                                !this.state.isSuccses
+                                    ? "uploader__drag-icon_img_indent"
+                                    : ""
+                            }`}
+                            src={
+                                this.state.isSuccses
+                                    ? `${this.state.serverLink}/assets/photos/${this.state.img}`
+                                    : require("../image/Icon.svg")
+                            }
+                            alt="Icon"
+                        />
+                    </div>
+                    <div className="uploader__drag-text-block">
+                        <p className="uploader__drag-text uploader__drag-text_1">
+                            {this.state.loading
+                                ? this.state.status.loader._1
+                                : this.state.isSuccses
+                                ? this.state.status.uploadedSuccess._1
+                                : this.state.status.uploader._1}
+                        </p>
+                        <p className="uploader__drag-text uploader__drag-text_2">
+                            - or -
+                        </p>
+                        <p className="uploader__drag-text uploader__drag-text_3">
+                            {this.state.loading
+                                ? this.state.status.loader._2
+                                : this.state.isSuccses
+                                ? this.state.status.uploadedSuccess._2
+                                : this.state.status.uploader._2}
+                        </p>
+                    </div>
                 </Dragger>
             </div>
         );
